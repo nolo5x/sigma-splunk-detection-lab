@@ -1,0 +1,21 @@
+# 1. Inventory events arriving from forwarders
+index=*
+| stats count by host, source, sourcetype
+
+# 2. Find PowerShell Script Block Logging events
+index=main EventCode=4104
+
+# 3. Inspect 4104 telemetry
+index=main EventCode=4104
+| table _time host EventCode source sourcetype Message
+
+# 4. Search raw telemetry for Invoke-WebRequest
+index=main source="WinEventLog:Microsoft-Windows-PowerShell/Operational"
+"Invoke-WebRequest"
+
+# 5. Extract ScriptBlockText and apply tuned Sigma-derived logic
+index=main source="WinEventLog:Microsoft-Windows-PowerShell/Operational"
+| rex field=_raw "<Data Name=['\"]ScriptBlockText['\"]>(?<ScriptBlockText>.*?)</Data>"
+| search ScriptBlockText IN ("*Invoke-WebRequest*", "*iwr*")
+         ScriptBlockText="*-OutFile*"
+| table _time host ScriptBlockText

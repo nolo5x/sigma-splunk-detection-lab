@@ -1,0 +1,7 @@
+# Search-time extraction used in this lab
+| rex field=_raw "<Data Name=['\"]ScriptBlockText['\"]>(?<ScriptBlockText>.*?)</Data>"
+
+# Validation view
+index=main source="WinEventLog:Microsoft-Windows-PowerShell/Operational"
+| rex field=_raw "<Data Name=['\"]ScriptBlockText['\"]>(?<ScriptBlockText>.*?)</Data>"
+| table _time host ScriptBlockText
